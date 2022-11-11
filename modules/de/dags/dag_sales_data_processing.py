@@ -17,7 +17,7 @@ default_args = {
 with DAG(
     dag_id='sales_data_processing',
     default_args=default_args,
-    start_date=datetime(2022, 1, 29),
+    start_date=datetime(2019, 12, 25),
     schedule_interval='@monthly',
     max_active_runs=1
 ) as dag:
