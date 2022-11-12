@@ -1,0 +1,54 @@
+Table customer_activity {
+  idx int [pk]
+  valid_from date
+  valid_to date
+  scd_a float
+  scd_b int
+}
+
+Table customer_profiles {
+    idx int [pk]
+    attr_a int
+    attr_b char(1)
+    attr_c varchar(3)
+}
+
+Table labels {
+    idx int [pk]
+    label int
+}
+
+Table feature_store {
+    idx int [pk]
+    attr_a int
+    attr_b char(1)
+    scd_a float
+    scd_b int
+    label int
+}
+
+Table sales {
+    idx int [pk]
+    value float
+    date date
+    store_idx int
+}
+
+Table store_locations {
+    idx int [pk]
+    location varchar(50)
+}
+
+Table monthly_sales {
+    store_idx int [pk]
+    location varchar(50)
+    sale_month date
+    value float
+}
+
+Ref: feature_store.idx - customer_activity.idx
+Ref: feature_store.idx - customer_profiles.idx
+Ref: feature_store.idx - labels.idx
+
+Ref: monthly_sales.store_idx > store_locations.idx
+Ref: monthly_sales.store_idx <> sales.store_idx
