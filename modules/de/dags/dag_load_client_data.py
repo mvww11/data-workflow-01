@@ -2,25 +2,30 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 from tasks.s3_file_download import download_from_s3, rename_file
 
 bucket_name = 'daredata-technical-challenge-data'
 local_path = '/var/tmp/'
 
 default_args = {
-    'owner': 'DareData-Waddington',
+    'owner': 'Marcus_Waddington',
     'retries': 5,
     'retry_delay': timedelta(minutes=5)
 }
 
 with DAG(
-    dag_id='customer_data_ingestion',
+    dag_id='load_client_data',
     default_args=default_args,
     start_date=datetime(2022, 11, 9),
-    schedule_interval='@once'
+    schedule_interval='@once',
+    tags=["DareData-Challenge"]
 ) as dag:
 
-    # transfer customer_activity.csv from S3 to postgres table
+    # dummy start task
+    start_task = DummyOperator(task_id="start")
+
+    # ingest customer_activity.csv from S3
     task_customer_activity_download = PythonOperator(
         task_id='customer-activity-download',
         python_callable=download_from_s3,
@@ -40,14 +45,7 @@ with DAG(
         }
     )
 
-    task_customer_activity_postgres = PostgresOperator(
-        task_id='customer-activity-create-table',
-        postgres_conn_id='postgres_operational_db',
-        params = {'path': f"'{local_path}customer_activity.csv'"},
-        sql="sql/customers_workflow/customer_activity_table.sql"
-    )
-
-    # transfer customer_profiles.csv from S3 to postgres table
+    # ingest customer_profiles.csv from S3
     task_customer_profiles_download = PythonOperator(
         task_id='customer-profiles-download',
         python_callable=download_from_s3,
@@ -67,14 +65,7 @@ with DAG(
         }
     )
 
-    task_customer_profiles_postgres = PostgresOperator(
-        task_id='customer-profiles-create-table',
-        postgres_conn_id='postgres_operational_db',
-        params = {'path': f"'{local_path}customer_profiles.csv'"},
-        sql="sql/customers_workflow/customer_profiles_table.sql"
-    )
-
-    # transfer labels.csv from S3 to postgres table
+    # ingest labels.csv from S3
     task_labels_download = PythonOperator(
         task_id='labels-download',
         python_callable=download_from_s3,
@@ -94,13 +85,12 @@ with DAG(
         }
     )
 
-    task_labels_postgres = PostgresOperator(
-        task_id='labels-create-table',
-        postgres_conn_id='postgres_operational_db',
-        params = {'path': f"'{local_path}labels.csv'"},
-        sql="sql/customers_workflow/labels_table.sql"
-    )
+    start_task >> [
+        task_customer_activity_download,
+        task_customer_profiles_download,
+        task_labels_download
+    ]
 
-    task_customer_activity_download >> task_customer_activity_rename >> task_customer_activity_postgres
-    task_customer_profiles_download >> task_customer_profiles_rename >> task_customer_profiles_postgres
-    task_labels_download >> task_labels_rename >> task_labels_postgres
+    task_customer_activity_download >> task_customer_activity_rename
+    task_customer_profiles_download >> task_customer_profiles_rename
+    task_labels_download >> task_labels_rename
