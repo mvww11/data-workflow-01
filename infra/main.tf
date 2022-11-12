@@ -97,3 +97,8 @@ resource "aws_instance" "dev_node" {
   #   interpreter = ["Powershell", "-Command"]
   # }
 }
+
+output "instance_public_ip" {
+  value       = aws_instance.dev_node.public_ip
+  description = "EC2 instance public ip. Use it to make requests to the DareData API."
+}
