@@ -31,7 +31,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - run: echo foo
+      - run: pytest modules/deployment/tests
 
   terraform:
     name: "Terraform"
