@@ -1,6 +1,7 @@
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 import os
 
+
 def download_from_s3(key: str, bucket_name: str, local_path: str) -> str:
     """Download single file from s3 bucket and save it to `local_path`
     folder with random filename. Must exist AWS connection `s3_conn`.
@@ -21,15 +22,14 @@ def download_from_s3(key: str, bucket_name: str, local_path: str) -> str:
         e.g. `/var/tmp/airflow_tmp_77ln2tx0`
     """
 
-    hook = S3Hook('s3_conn')
+    hook = S3Hook("s3_conn")
 
     file_name = hook.download_file(
-        key=key,
-        bucket_name=bucket_name,
-        local_path=local_path
+        key=key, bucket_name=bucket_name, local_path=local_path
     )
 
     return file_name
+
 
 def rename_file(ti, new_name: str, download_task_id: str) -> None:
     """Renames to `new_name` the random generated filename of the s3
@@ -40,7 +40,7 @@ def rename_file(ti, new_name: str, download_task_id: str) -> None:
     downloaded_file_name = ti.xcom_pull(task_ids=[download_task_id])
 
     # rename file
-    downloaded_file_path = '/'.join(downloaded_file_name[0].split('/')[:-1])
+    downloaded_file_path = "/".join(downloaded_file_name[0].split("/")[:-1])
     os.rename(src=downloaded_file_name[0], dst=f"{downloaded_file_path}/{new_name}")
 
     # change file permission to allow PostgresOperator to read it later

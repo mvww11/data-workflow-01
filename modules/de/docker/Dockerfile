@@ -1,5 +1,5 @@
 # Note that this file is not being used in the docker-compose file
-# at the moment, but I decided to let it here to show that, in there
+# at the moment, but I decided to let it here to show that, in the
 # future, I could extend airflow image and install any aditional
 # package I might need. In this case I would have to update the
 # docker-compose file to build from this Dockerfile instead of using

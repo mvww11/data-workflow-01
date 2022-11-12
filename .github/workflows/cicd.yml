@@ -4,7 +4,7 @@
 #   TF_API_TOKEN: terraform cloud API token
 #   TF_VAR_PUBLIC_KEY: pub ssh key of local machine to allow ssh connection to ec2
 
-name: "Terraform"
+name: "DareData CI/CD"
 
 on:
   push:
@@ -17,8 +17,25 @@ env:
   TF_VAR_public_key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
 
 jobs:
+  lint:
+    name: "Enforce Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
+        with:
+          version: "22.10.0"
+
+  testing:
+    name: "Pytest"
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo foo
+
   terraform:
     name: "Terraform"
+    needs: testing
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -84,12 +101,14 @@ jobs:
 
       - name: Terraform Destroy Previous Infra
         id: destroy
-        if: github.event_name == 'push'
+        if: |
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/implementation')
         run: terraform -chdir=infra destroy -auto-approve
         continue-on-error: true
 
       - name: Terraform Apply
         if: |
-          github.event_name == 'push' ||
+          github.event_name == 'push' &&
           (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/implementation')
         run: terraform -chdir=infra apply -auto-approve -input=false
